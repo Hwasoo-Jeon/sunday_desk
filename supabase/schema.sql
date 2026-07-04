@@ -76,7 +76,7 @@ create table if not exists public.projects (
   updated_at timestamptz not null default now(),
   constraint projects_title_not_blank check (length(btrim(title)) > 0),
   constraint projects_slug_not_blank check (length(btrim(slug)) > 0),
-  constraint projects_slug_format check (slug ~ '^[a-z0-9가-힣]+(?:-[a-z0-9가-힣]+)*$'),
+  constraint projects_slug_format check (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
   constraint projects_user_slug_unique unique (user_id, slug)
 );
 
@@ -155,6 +155,23 @@ create index if not exists generated_outputs_project_type_idx on public.generate
 create index if not exists generated_outputs_user_favorite_idx on public.generated_outputs(user_id, is_favorite);
 create index if not exists resume_bullets_project_order_idx on public.resume_bullets(project_id, display_order);
 create index if not exists interview_questions_project_order_idx on public.interview_questions(project_id, display_order);
+
+grant usage on schema public to anon, authenticated;
+
+grant select on public.profiles to anon, authenticated;
+grant select on public.skills to anon, authenticated;
+grant select on public.profile_links to anon, authenticated;
+grant select on public.projects to anon, authenticated;
+grant select on public.generated_outputs to anon, authenticated;
+
+grant select, insert, update, delete on public.profiles to authenticated;
+grant select, insert, update, delete on public.skills to authenticated;
+grant select, insert, update, delete on public.profile_links to authenticated;
+grant select, insert, update, delete on public.projects to authenticated;
+grant select, insert, update, delete on public.project_sources to authenticated;
+grant select, insert, update, delete on public.generated_outputs to authenticated;
+grant select, insert, update, delete on public.resume_bullets to authenticated;
+grant select, insert, update, delete on public.interview_questions to authenticated;
 
 drop trigger if exists set_profiles_updated_at on public.profiles;
 create trigger set_profiles_updated_at

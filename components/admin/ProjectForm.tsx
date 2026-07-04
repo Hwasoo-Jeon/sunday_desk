@@ -11,21 +11,21 @@ type ProjectFormProps = {
 
 const errorMessages: Record<string, string> = {
   missing_title: "프로젝트 제목을 입력하세요.",
-  missing_slug: "slug를 입력하거나 제목을 입력해 자동 생성하세요.",
+  missing_slug: "영문 slug를 입력하세요.",
+  invalid_slug: "slug는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.",
   invalid_links: "links는 JSON 배열 형식이어야 합니다.",
   save_failed: "저장에 실패했습니다. slug 중복 또는 입력값을 확인하세요.",
   publish_failed: "공개 상태 변경에 실패했습니다.",
   delete_failed: "삭제에 실패했습니다."
 };
 
-function slugify(value: string) {
+function normalizeSlug(value: string) {
   return value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9가-힣\s-]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/-+/g, "-");
 }
 
 function formatDate(value: string | null) {
@@ -43,7 +43,6 @@ function formatLinks(value: ProjectRecord["links"]) {
 export function ProjectForm({ project, error }: ProjectFormProps) {
   const [title, setTitle] = useState(project?.title ?? "");
   const [slug, setSlug] = useState(project?.slug ?? "");
-  const [isSlugDirty, setIsSlugDirty] = useState(Boolean(project?.slug));
   const action = useMemo(() => {
     if (!project) {
       return createProjectAction;
@@ -51,14 +50,6 @@ export function ProjectForm({ project, error }: ProjectFormProps) {
 
     return updateProjectAction.bind(null, project.id);
   }, [project]);
-
-  function handleTitleChange(value: string) {
-    setTitle(value);
-
-    if (!isSlugDirty) {
-      setSlug(slugify(value));
-    }
-  }
 
   return (
     <form action={action} className="space-y-5">
@@ -76,7 +67,7 @@ export function ProjectForm({ project, error }: ProjectFormProps) {
               id="title"
               name="title"
               value={title}
-              onChange={(event) => handleTitleChange(event.target.value)}
+              onChange={(event) => setTitle(event.target.value)}
               required
               className="w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-ink"
             />
@@ -87,13 +78,13 @@ export function ProjectForm({ project, error }: ProjectFormProps) {
               id="slug"
               name="slug"
               value={slug}
-              onChange={(event) => {
-                setIsSlugDirty(true);
-                setSlug(slugify(event.target.value));
-              }}
+              onChange={(event) => setSlug(normalizeSlug(event.target.value))}
               required
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              placeholder="incheon-airport-self-bag-drop"
               className="w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-ink"
             />
+            <p className="mt-1 text-xs text-muted">영문 소문자, 숫자, 하이픈만 사용합니다. 제목에서 자동 생성하지 않습니다.</p>
           </Field>
 
           <Field label="Period Start" htmlFor="period_start">
