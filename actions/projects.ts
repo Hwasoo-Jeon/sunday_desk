@@ -38,10 +38,14 @@ function slugify(value: string) {
   return value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9가-힣\s-]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function isValidSlug(value: string) {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 }
 
 function parseTechStack(value: string) {
@@ -76,7 +80,7 @@ function parseLinks(value: string): Json {
 function parseProjectForm(formData: FormData): ProjectFormValues {
   const title = getStringValue(formData, "title");
   const requestedSlug = getStringValue(formData, "slug");
-  const slug = slugify(requestedSlug || title);
+  const slug = slugify(requestedSlug);
 
   if (!title) {
     throw new Error("missing_title");
@@ -84,6 +88,10 @@ function parseProjectForm(formData: FormData): ProjectFormValues {
 
   if (!slug) {
     throw new Error("missing_slug");
+  }
+
+  if (!isValidSlug(slug)) {
+    throw new Error("invalid_slug");
   }
 
   return {
@@ -128,7 +136,7 @@ async function getAuthenticatedSupabase() {
 
 function redirectWithProjectFormError(basePath: string, error: unknown): never {
   const message = error instanceof Error ? error.message : "unknown";
-  const knownErrors = new Set(["missing_title", "missing_slug", "invalid_links"]);
+  const knownErrors = new Set(["missing_title", "missing_slug", "invalid_slug", "invalid_links"]);
   const code = knownErrors.has(message) ? message : "save_failed";
   redirect(`${basePath}?error=${code}`);
 }
